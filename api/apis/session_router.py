@@ -18,7 +18,8 @@ router = APIRouter(
     tags=["authentication"]
 )
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
+
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
 @router.get("/")
 async def get_sessions():
@@ -70,26 +71,25 @@ async def signup(user: UserCreate):
     user_dict["create_on"] = current_timestamp
     user_dict["last_update"] = current_timestamp
     
-    dbResponse = await db.users.insert_one(user_dict)
-    print(dbResponse,"sdfdsf")
+    await db.users.insert_one(user_dict)
     
     return UserResponse(**user_dict)
 
 @router.post("/login")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login(email: str, password: str):
     db = await Database.get_db()
-    user = await db.users.find_one({"user_email": form_data.username})
+    user = await db.users.find_one({"user_email": email})
     
-    if not user or not verify_password(form_data.password, user["password"]):
+    if not user or not verify_password(password, user["password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
         )
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    # Use user_id instead of email in token
     access_token = create_access_token(
-        data={"sub": user["user_email"]},
+        data={"user_id": user["user_id"]},
         expires_delta=access_token_expires
     )
     
