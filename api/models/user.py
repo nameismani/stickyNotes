@@ -12,8 +12,8 @@ class UserCreate(UserBase):
 
 class UserResponse(UserBase):
     user_id: UUID = Field(default_factory=uuid4)
-    last_update: datetime = Field(default_factory=datetime.utcnow)
-    create_on: datetime = Field(default_factory=datetime.utcnow)
+    last_update: int = Field(default_factory=lambda: int(datetime.utcnow().timestamp()))
+    create_on: int = Field(default_factory=lambda: int(datetime.utcnow().timestamp()))
 
     class Config:
         from_attributes = True 

@@ -42,11 +42,12 @@ app.include_router(router)
 
 database_url = os.getenv("DATABASE_URL")
 
-print(database_url,"sdfdf")
+# print(database_url,"sdfdf")
    
 @app.get("/")
 def read_root():
     return {"message": "Hello, World!"}
+    
 
 if __name__ == "__main__":
     import uvicorn

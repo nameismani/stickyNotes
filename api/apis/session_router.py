@@ -11,6 +11,7 @@ from utils.auth import (
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
 from uuid import uuid4
+import time
 
 router = APIRouter(
     prefix="/api/auth",
@@ -62,12 +63,15 @@ async def signup(user: UserCreate):
         )
     
     # Create new user
+    current_timestamp = int(time.time())
     user_dict = user.dict()
     user_dict["password"] = get_password_hash(user.password)
     user_dict["user_id"] = str(uuid4())
-    user_dict["create_on"] = user_dict["last_update"] = datetime.utcnow()
+    user_dict["create_on"] = current_timestamp
+    user_dict["last_update"] = current_timestamp
     
-    await db.users.insert_one(user_dict)
+    dbResponse = await db.users.insert_one(user_dict)
+    print(dbResponse,"sdfdsf")
     
     return UserResponse(**user_dict)
 
