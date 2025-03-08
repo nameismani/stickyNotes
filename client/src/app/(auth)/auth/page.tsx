@@ -6,7 +6,7 @@ interface AuthPageProps {
 }
 
 const AuthPage = ({ searchParams }: AuthPageProps) => {
-  const initialTab = searchParams.tab === "register" ? "register" : "login";
+  const initialTab = "login";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-pink-50 to-orange-50 p-4">

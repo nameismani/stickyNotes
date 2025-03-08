@@ -8,6 +8,7 @@ import AuthTab from "../ui/AuthTab";
 import { useToast } from "@/context/ToastContext";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
+import useAxios from "@/hooks/useAxios";
 
 interface AuthFormProps {
   initialTab?: "login" | "register";
@@ -32,6 +33,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ initialTab = "login" }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const { post, error: registerError } = useAxios(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/auth/signup`
+  );
   const { showToast } = useToast();
 
   // Reset all states when tab changes
@@ -183,29 +187,18 @@ const AuthForm: React.FC<AuthFormProps> = ({ initialTab = "login" }) => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/register`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username: formData.username,
-            email: formData.email,
-            password: formData.password,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Registration failed");
-      }
+      const data = await post({
+        user_name: formData.username,
+        user_email: formData.email,
+        password: formData.password,
+      });
+      console.log(data, "asfddsafdfs");
+      //   if (!response.ok) {
+      //     throw new Error(data.message || "Registration failed");
+      //   }
 
       showToast("Successfully registered! Please login.", "success");
-      setTab("login");
+      handleTabChange("login");
     } catch (error) {
       console.error("Registration error:", error);
       showToast(
