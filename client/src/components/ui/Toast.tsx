@@ -37,25 +37,44 @@ const Toast: React.FC<ToastProps> = ({
     warning: "bg-yellow-500 text-white",
   };
 
-  const positionStyles = {
-    "top-right": "animate-toastSlideIn",
-    "top-left": "animate-toastSlideInLeft",
-    "bottom-right": "animate-toastSlideIn",
-    "bottom-left": "animate-toastSlideInLeft",
+  // Define transform origins based on position
+  const getTransformOrigin = () => {
+    switch (position) {
+      case "top-right":
+        return "origin-top-right";
+      case "top-left":
+        return "origin-top-left";
+      case "bottom-right":
+        return "origin-bottom-right";
+      case "bottom-left":
+        return "origin-bottom-left";
+      default:
+        return "origin-center";
+    }
   };
 
-  const exitAnimations = {
-    "top-right": "animate-toastSlideOut",
-    "top-left": "animate-toastSlideOutLeft",
-    "bottom-right": "animate-toastSlideOut",
-    "bottom-left": "animate-toastSlideOutLeft",
+  // Define position styles
+  const getPositionStyles = () => {
+    const base = "fixed";
+    switch (position) {
+      case "top-right":
+        return `${base} top-4 right-4`;
+      case "top-left":
+        return `${base} top-4 left-4`;
+      case "bottom-right":
+        return `${base} bottom-4 right-4`;
+      case "bottom-left":
+        return `${base} bottom-4 left-4`;
+      default:
+        return base;
+    }
   };
 
   const handleClose = () => {
     setIsExiting(true);
     setTimeout(() => {
       onClose(id);
-    }, 300);
+    }, 150);
   };
 
   useEffect(() => {
@@ -68,22 +87,29 @@ const Toast: React.FC<ToastProps> = ({
 
   return (
     <div
-      className={`${baseStyles} ${typeStyles[type]} ${
-        isExiting ? exitAnimations[position] : positionStyles[position]
-      } transition-all duration-300 ease-in-out transform hover:scale-[1.02] hover:shadow-xl backdrop-blur-sm bg-opacity-95`}
+      className={`
+        ${baseStyles}
+        ${typeStyles[type]}
+        ${getPositionStyles()}
+        ${getTransformOrigin()}
+        transition-all duration-150 ease-in-out
+        backdrop-blur-sm bg-opacity-95
+        ${
+          isExiting
+            ? "opacity-0 scale-95 translate-y-2"
+            : "opacity-100 scale-100 translate-y-0"
+        }
+      `}
       role="alert"
     >
-      <div className="flex items-center">
-        <div className="relative">
-          <div className="h-2 w-2 rounded-full bg-white mr-3 animate-pulse" />
-        </div>
+      <div className="flex items-center gap-3">
         <p className="text-sm font-medium">{message}</p>
       </div>
       <button
         onClick={handleClose}
-        className="ml-4 inline-flex text-white hover:text-gray-100 focus:outline-none transform hover:rotate-90 transition-transform duration-200"
+        className="ml-4 p-1 rounded-full hover:bg-white/20 transition-colors duration-200"
       >
-        <FiX size={20} />
+        <FiX size={18} />
       </button>
     </div>
   );

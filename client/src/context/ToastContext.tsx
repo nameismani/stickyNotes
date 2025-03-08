@@ -32,11 +32,19 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
       position: ToastPosition = "bottom-right"
     ) => {
       const id = Math.random().toString(36).substr(2, 9);
-      setToasts((prev) => [...prev, { id, message, type, position }]);
 
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((toast) => toast.id !== id));
-      }, 5000);
+      // Limit the number of toasts per position
+      setToasts((prev) => {
+        const positionToasts = prev.filter((t) => t.position === position);
+        if (positionToasts.length >= 3) {
+          return [
+            ...prev.filter((t) => t.position !== position),
+            ...positionToasts.slice(1),
+            { id, message, type, position },
+          ];
+        }
+        return [...prev, { id, message, type, position }];
+      });
     },
     []
   );
@@ -45,37 +53,23 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
-  // Group toasts by position
-  const groupedToasts = toasts.reduce((acc, toast) => {
-    if (!acc[toast.position]) {
-      acc[toast.position] = [];
-    }
-    acc[toast.position].push(toast);
-    return acc;
-  }, {} as Record<ToastPosition, ToastMessage[]>);
-
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      {Object.entries(groupedToasts).map(([position, positionToasts]) => (
-        <div
-          key={position}
-          className={`fixed p-4 space-y-4 z-50 ${
-            position.includes("top") ? "top-0" : "bottom-0"
-          } ${position.includes("right") ? "right-0" : "left-0"}`}
-        >
-          {positionToasts.map((toast) => (
+      {/* Group toasts by position */}
+      <div className="fixed inset-0 pointer-events-none flex flex-col items-end justify-start gap-4 p-4 z-50">
+        {toasts.map((toast) => (
+          <div key={toast.id} className="pointer-events-auto">
             <Toast
-              key={toast.id}
               id={toast.id}
               message={toast.message}
               type={toast.type}
-              position={toast.position as ToastPosition}
+              position={toast.position}
               onClose={handleClose}
             />
-          ))}
-        </div>
-      ))}
+          </div>
+        ))}
+      </div>
     </ToastContext.Provider>
   );
 };
