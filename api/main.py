@@ -17,8 +17,9 @@ app = FastAPI(
 )
 
 origins = [
-    "http://localhost:3000",  
-    "https://yourdomain.com",  
+    # "http://localhost:3000",  
+    # "https://yourdomain.com",  
+    "*",
     # we can also allow all origins by using "*"
 ]
 

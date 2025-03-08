@@ -9,6 +9,8 @@ import { useToast } from "@/context/ToastContext";
 import Input from "../ui/Input";
 import Button from "../ui/Button";
 import useAxios from "@/hooks/useAxios";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 interface AuthFormProps {
   initialTab?: "login" | "register";
@@ -37,6 +39,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ initialTab = "login" }) => {
     `${process.env.NEXT_PUBLIC_API_URL}/api/auth/signup`
   );
   const { showToast } = useToast();
+  const router = useRouter();
 
   // Reset all states when tab changes
   const handleTabChange = (newTab: "login" | "register") => {
@@ -144,33 +147,24 @@ const AuthForm: React.FC<AuthFormProps> = ({ initialTab = "login" }) => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: formData.email,
-            password: formData.password,
-          }),
-        }
-      );
+      const result = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+      if (result?.error) {
+        showToast(result.error, "error", "top-right");
+      } else {
+        showToast("Successfully logged in!", "success", "top-right");
+        router.push("/home"); // Redirect to protected home page
       }
-
-      showToast("Successfully logged in!", "success");
-      // Add your success handling here
     } catch (error) {
       console.error("Login error:", error);
       showToast(
         error instanceof Error ? error.message : "Login failed",
-        "error"
+        "error",
+        "top-right"
       );
     } finally {
       setIsLoading(false);
