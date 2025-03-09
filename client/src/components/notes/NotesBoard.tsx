@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect, use } from "react";
+import { motion, AnimatePresence, useTime } from "framer-motion";
 import {
   FiPlus,
   FiSearch,
@@ -22,6 +22,7 @@ import {
 } from "@/redux/slices/notesSlice";
 import useAxios from "@/hooks/useAxios";
 import { deleteNoteServerAction } from "@/libs/action";
+import { useToast } from "@/context/ToastContext";
 
 type ViewMode = "grid" | "list";
 
@@ -37,6 +38,7 @@ const NotesBoard: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentNote, setCurrentNote] = useState<Note | undefined>(undefined);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const { showToast } = useToast();
   const {
     data,
     error: updateError,
@@ -76,7 +78,7 @@ const NotesBoard: React.FC = () => {
     }
   }, [dispatch, status]);
   useEffect(() => {
-    console.log(notes, "notes");
+    console.log(notes, "notes rendered");
   }, [notes]);
 
   // Filter notes based on search query
@@ -101,19 +103,28 @@ const NotesBoard: React.FC = () => {
     if (note.id) {
       // Update existing note
       // dispatch(updateNote(note as Note));
-      // Through Asyncthunk API:
+      // Through AsyncThunk API:
       // dispatch(updateNoteAsync(note as Note));
       // through custom hook with axios
-      await updateNote(
-        {
-          note_title: note.title || "",
-          note_content: note.content || "",
-          color: note.color || "#FFC107",
-        },
-        { id: note.id }
-      ).finally(() => {
-        dispatch(fetchNotes());
-      });
+      try {
+        const response = await updateNote(
+          {
+            note_title: note.title || "",
+            note_content: note.content || "",
+            color: note.color || "#FFC107",
+          },
+          { id: note.id }
+        );
+        if (response) {
+          dispatch(fetchNotes());
+          showToast("Note updated successfully", "success", "top-right");
+        } else {
+          showToast("Failed to update note", "error", "top-right");
+        }
+      } catch (error) {
+        console.error("Error updating note:", error);
+        showToast("Failed to update note", "error", "top-right");
+      }
     } else {
       // Add new note
       // dispatch(
@@ -123,16 +134,26 @@ const NotesBoard: React.FC = () => {
       //     color: note.color || "#FFC107",
       //   })
       // );
-      // If API is available:
+      // Through AsyncThunk API:
       dispatch(
         addNoteAsync({
           title: note.title || "",
           content: note.content || "",
           color: note.color || "#FFC107",
         })
-      ).finally(() => {
-        dispatch(fetchNotes());
-      });
+      )
+        .then((response) => {
+          if (response.meta.requestStatus === "fulfilled") {
+            dispatch(fetchNotes());
+            showToast("Note added successfully", "success", "top-right");
+          } else {
+            showToast("Failed to add note", "error", "top-right");
+          }
+        })
+        .catch((error) => {
+          console.error("Error adding note:", error);
+          showToast("Failed to add note", "error", "top-right");
+        });
     }
   };
 
@@ -141,16 +162,19 @@ const NotesBoard: React.FC = () => {
       // dispatch(deleteNote(id));
       // If API is available:
       // dispatch(deleteNoteAsync(id));
-      deleteNoteServerAction(id).then((res: any) => {
-        console.log(res, "res");
-        if (res?.ok) {
+      deleteNoteServerAction(id).then((result) => {
+        if (result.success) {
           dispatch(fetchNotes());
+          showToast("Note deleted successfully", "success", "top-right");
+        } else {
+          // Handle error - maybe show a toast notification
+          console.error("Failed to delete note:", result.message);
+          showToast("Failed to delete note", "error", "top-right");
         }
       });
     }
   };
 
-  // Layout variants for the grid/list view
   const gridLayoutClass =
     viewMode === "grid"
       ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
@@ -231,7 +255,7 @@ const NotesBoard: React.FC = () => {
       ) : filteredNotes.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-64 text-center p-4 bg-gray-50 rounded-lg">
           <img
-            src="/empty-notes.svg" // You'll need to create or find this SVG
+            src="/empty-notes.svg"
             alt="No notes found"
             className="w-32 h-32 mb-4 opacity-70"
           />
