@@ -59,14 +59,14 @@ router = APIRouter(
 @router.post("/signup", response_model=UserResponse)
 async def signup(user: UserCreate):
     db = await Database.get_db()
-    
+    logging.info("signup route accessed!",user)
     # Check if user already exists
     if await db.users.find_one({"user_email": user.user_email}):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
-    logging.info("signup route accessed!",user)
+  
     # Create new user
     current_timestamp = int(time.time())
     user_dict = user.dict()
