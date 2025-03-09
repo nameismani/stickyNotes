@@ -42,7 +42,25 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_db_client():
-    await init_db()
+    try:
+        # Log all environment variables to debug (excluding secrets)
+        env_vars = {k: v if not any(secret in k.lower() for secret in ["key", "secret", "token", "password"]) else "[MASKED]" 
+                   for k, v in os.environ.items()}
+        logging.info(f"Environment variables: {env_vars}")
+        
+        # Check essential environment variables
+        mongodb_url = os.getenv("MONGODB_URL")
+        if not mongodb_url:
+            logging.error("MONGODB_URL environment variable is not set!")
+        else:
+            logging.info(f"MONGODB_URL is set: {mongodb_url[:20]}...")
+        
+        # Initialize database connection
+        await init_db()
+        logging.info("Database initialized successfully")
+    except Exception as e:
+        logging.error(f"Failed to initialize database: {str(e)}")
+        # Don't raise - allow API to start even with DB connection issues
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

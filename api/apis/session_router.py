@@ -58,26 +58,35 @@ router = APIRouter(
 
 @router.post("/signup", response_model=UserResponse)
 async def signup(user: UserCreate):
-    db = await Database.get_db()
-    logging.info("signup route accessed!",user)
-    # Check if user already exists
-    if await db.users.find_one({"user_email": user.user_email}):
+    try:
+        db = await Database.get_db()
+        logging.info(f"Processing signup for user: {user.user_email}")
+        
+        # Check if user already exists
+        if await db.users.find_one({"user_email": user.user_email}):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+        
+        # Create new user
+        current_timestamp = int(time.time())
+        user_dict = user.dict()
+        user_dict["password"] = get_password_hash(user.password)
+        user_dict["user_id"] = str(uuid4())
+        user_dict["create_on"] = current_timestamp
+        user_dict["last_update"] = current_timestamp
+        
+        result = await db.users.insert_one(user_dict)
+        logging.info(f"User created with ID: {result.inserted_id}")
+        
+        return UserResponse(**user_dict)
+    except Exception as e:
+        logging.error(f"Signup error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Could not create user: {str(e)}"
         )
-  
-    # Create new user
-    current_timestamp = int(time.time())
-    user_dict = user.dict()
-    user_dict["password"] = get_password_hash(user.password)
-    user_dict["user_id"] = str(uuid4())
-    user_dict["create_on"] = current_timestamp
-    user_dict["last_update"] = current_timestamp
-    
-    await db.users.insert_one(user_dict)
-    logging.info("signup route accessed!",user_dict)
-    return UserResponse(**user_dict)
 class LoginRequest(BaseModel):
     email: str
     password: str
