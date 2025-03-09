@@ -1,12 +1,17 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
 from apis.api_router import router
 from db.mongodb import init_db, close_db
 import logging
+import sys
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
 
 # Load environment variables first
 dotenv_path = os.path.join(os.path.dirname(__file__), "..", ".env")
@@ -53,6 +58,18 @@ def read_root():
     logging.info("root accessed!")
     return {"message": "Hello, World!"}
     
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    # Log every request to debug
+    logging.info(f"Request: {request.method} {request.url}")
+    try:
+        response = await call_next(request)
+        logging.info(f"Response: {response.status_code}")
+        return response
+    except Exception as e:
+        logging.error(f"Request failed: {str(e)}")
+        raise
 
 if __name__ == "__main__":
     import uvicorn
