@@ -92,12 +92,12 @@ const ConfirmationModal = forwardRef<
   const getBackgroundClass = () => {
     switch (backgroundStyle) {
       case "transparent":
-        return "bg-transparent"; // Completely transparent
+        return "bg-transparent";
       case "blur":
-        return "bg-white/10 backdrop-blur-sm"; // Subtle blur with very little opacity
+        return "bg-white/10 backdrop-blur-sm";
       case "dim":
       default:
-        return "bg-black/50"; // Traditional dimmed background
+        return "bg-black/50";
     }
   };
 
