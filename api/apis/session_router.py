@@ -58,18 +58,32 @@ router = APIRouter(
 
 @router.post("/signup", response_model=UserResponse)
 async def signup(user: UserCreate):
+    # Log when the route is accessed
+    logging.info(f"Signup route accessed for: {user.user_email}")
+    
     try:
-        db = await Database.get_db()
-        logging.info(f"Processing signup for user: {user.user_email}")
+        # Check for valid MongoDB connection
+        try:
+            db = await Database.get_db()
+        except Exception as e:
+            logging.error(f"MongoDB connection error in signup: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Database connection failed: {str(e)}"
+            )
         
         # Check if user already exists
-        if await db.users.find_one({"user_email": user.user_email}):
+        logging.info(f"Checking if user {user.user_email} already exists")
+        existing_user = await db.users.find_one({"user_email": user.user_email})
+        if existing_user:
+            logging.info(f"User {user.user_email} already exists")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered"
             )
         
         # Create new user
+        logging.info(f"Creating new user: {user.user_email}")
         current_timestamp = int(time.time())
         user_dict = user.dict()
         user_dict["password"] = get_password_hash(user.password)
@@ -77,12 +91,24 @@ async def signup(user: UserCreate):
         user_dict["create_on"] = current_timestamp
         user_dict["last_update"] = current_timestamp
         
-        result = await db.users.insert_one(user_dict)
-        logging.info(f"User created with ID: {result.inserted_id}")
+        # Insert user with more logging
+        try:
+            result = await db.users.insert_one(user_dict)
+            logging.info(f"User created with ID: {result.inserted_id}")
+        except Exception as e:
+            logging.error(f"Failed to insert user into database: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Database operation failed: {str(e)}"
+            )
         
         return UserResponse(**user_dict)
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
     except Exception as e:
-        logging.error(f"Signup error: {str(e)}")
+        # Log unhandled errors 
+        logging.error(f"Unhandled signup error: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Could not create user: {str(e)}"
