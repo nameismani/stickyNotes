@@ -169,8 +169,8 @@ async def log_requests(request: Request, call_next):
         raise
 
 # This is required by Vercel
-from mangum import Adapter
-handler = Adapter(app)
+from mangum import Mangum
+handler = Mangum(app)
 
 if __name__ == "__main__":
     import uvicorn
