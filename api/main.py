@@ -62,7 +62,10 @@ def read_root():
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     # Log every request to debug
-    logging.info(f"Request: {request.method} {request.url}")
+    port = int(os.getenv("API_PORT", 8000))
+    logging.info(f"port: {port}")
+    logging.info(f"Request: {request.method} {request.url} {request.headers}")
+    logging.info(f"Request data: {request}")
     try:
         response = await call_next(request)
         logging.info(f"Response: {response.status_code}")
