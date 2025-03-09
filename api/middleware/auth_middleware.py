@@ -2,6 +2,9 @@ from fastapi import Request, HTTPException, status
 from fastapi.security import HTTPBearer
 from utils.auth import get_current_user_id
 from db.mongodb import Database
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 security = HTTPBearer()
 
@@ -11,7 +14,7 @@ async def get_user_from_token(request: Request):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authorization header missing"
         )
-    
+    logging.info("middleware accessed!",request.headers)
     try:
         # Get token from header
         auth_header = request.headers["authorization"]
@@ -30,7 +33,7 @@ async def get_user_from_token(request: Request):
         db = await Database.get_db()
         user = await db.users.find_one({"user_id": user_id})
       
-        
+        logging.info("userDetails from token!",user)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

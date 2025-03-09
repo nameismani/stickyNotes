@@ -13,6 +13,9 @@ from utils.auth import (
 )
 from uuid import uuid4
 import time
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 router = APIRouter(
     prefix="/api/auth",
@@ -63,7 +66,7 @@ async def signup(user: UserCreate):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
-    
+    logging.info("signup route accessed!",user)
     # Create new user
     current_timestamp = int(time.time())
     user_dict = user.dict()
@@ -73,7 +76,7 @@ async def signup(user: UserCreate):
     user_dict["last_update"] = current_timestamp
     
     await db.users.insert_one(user_dict)
-    
+    logging.info("signup route accessed!",user_dict)
     return UserResponse(**user_dict)
 class LoginRequest(BaseModel):
     email: str
@@ -82,6 +85,7 @@ class LoginRequest(BaseModel):
 @router.post("/login")
 async def login(request: LoginRequest):
     print(request.email, request.password,"sdfdfas")
+    logging.info("login route accessed!",request)
     db = await Database.get_db()
     user = await db.users.find_one({"user_email": request.email})
     

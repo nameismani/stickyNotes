@@ -4,6 +4,9 @@ import os
 from dotenv import load_dotenv
 from apis.api_router import router
 from db.mongodb import init_db, close_db
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 # Load environment variables first
 dotenv_path = os.path.join(os.path.dirname(__file__), "..", ".env")
@@ -47,6 +50,7 @@ database_url = os.getenv("DATABASE_URL")
    
 @app.get("/")
 def read_root():
+    logging.info("root accessed!")
     return {"message": "Hello, World!"}
     
 
