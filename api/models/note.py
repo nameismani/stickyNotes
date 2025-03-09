@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 class NoteBase(BaseModel):
     note_title: str
     note_content: str
+    color: str
 
 class NoteCreate(NoteBase):
     pass
@@ -13,6 +14,7 @@ class NoteCreate(NoteBase):
 class NoteUpdate(NoteBase):
     note_title: Optional[str] = None
     note_content: Optional[str] = None
+    color: Optional[str] = None
 
 class NoteResponse(NoteBase):
     note_id: str

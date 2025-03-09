@@ -67,22 +67,10 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
       </div>
 
       {/* Content container with custom scrollbar */}
-      <div className="relative h-[420px] overflow-y-auto custom-scrollbar">
-        <style jsx>{`
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.7);
-            border-radius: 20px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background-color: rgba(255, 255, 255, 0.9);
-          }
-        `}</style>
+      <div className="relative h-[420px] overflow-y-auto register-custom-scrollbar">
+        {/* <style jsx>{`
+       
+        `}</style> */}
         <div className="absolute inset-0">
           {React.Children.map(children, (child) => {
             if (React.isValidElement(child)) {

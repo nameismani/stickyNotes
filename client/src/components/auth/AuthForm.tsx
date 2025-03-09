@@ -157,7 +157,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ initialTab = "login" }) => {
         showToast(result.error, "error", "top-right");
       } else {
         showToast("Successfully logged in!", "success", "top-right");
-        router.push("/home"); // Redirect to protected home page
+        router.push("/home");
       }
     } catch (error) {
       console.error("Login error:", error);
