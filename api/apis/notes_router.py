@@ -18,6 +18,7 @@ async def create_note(
     _=Depends(get_user_from_token)
 ):
     db = await Database.get_db()
+    print(note, request, "note")
     user = request.state.user
     
     current_timestamp = int(time.time())

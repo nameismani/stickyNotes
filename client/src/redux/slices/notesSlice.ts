@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
+import api from "@/services/api";
 
 // Define the Note type
 export interface Note {
@@ -43,21 +44,23 @@ export const noteColors = [
   "#CDDC39", // Lime
 ];
 
-// Async thunks for API operations
+// Async thunks for API operations using the custom axios instance
 export const fetchNotes = createAsyncThunk("notes/fetchNotes", async () => {
-  const response = await axios.get(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/notes`
-  );
+  const response = await api.get("/api/notes");
+  console.log(response, "thunk response");
   return response.data;
 });
 
 export const addNoteAsync = createAsyncThunk(
   "notes/addNote",
   async (note: Omit<Note, "id" | "createdAt" | "updatedAt">) => {
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/notes`,
-      note
-    );
+    const response = await api.post("/api/notes", {
+      // ...note,
+      note_title: note.title,
+      note_content: note.content,
+      color: note.color,
+    });
+
     return response.data;
   }
 );
@@ -65,10 +68,7 @@ export const addNoteAsync = createAsyncThunk(
 export const updateNoteAsync = createAsyncThunk(
   "notes/updateNote",
   async (note: Note) => {
-    const response = await axios.put(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/notes/${note.id}`,
-      note
-    );
+    const response = await api.put(`/api/notes/${note.id}`, note);
     return response.data;
   }
 );
@@ -76,7 +76,7 @@ export const updateNoteAsync = createAsyncThunk(
 export const deleteNoteAsync = createAsyncThunk(
   "notes/deleteNote",
   async (id: string) => {
-    await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/notes/${id}`);
+    await api.delete(`/api/notes/${id}`);
     return id;
   }
 );
@@ -120,7 +120,14 @@ const notesSlice = createSlice({
       })
       .addCase(fetchNotes.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.items = action.payload;
+        state.items = action.payload?.map((note: any) => ({
+          id: note.note_id,
+          title: note.note_title,
+          content: note.note_content,
+          color: note.color,
+          createdAt: note.created_on,
+          updatedAt: note.last_update,
+        }));
       })
       .addCase(fetchNotes.rejected, (state, action) => {
         state.status = "failed";

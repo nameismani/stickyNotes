@@ -20,6 +20,8 @@ import {
   updateNoteAsync,
   deleteNoteAsync,
 } from "@/redux/slices/notesSlice";
+import useAxios from "@/hooks/useAxios";
+import { deleteNoteServerAction } from "@/libs/action";
 
 type ViewMode = "grid" | "list";
 
@@ -35,48 +37,55 @@ const NotesBoard: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentNote, setCurrentNote] = useState<Note | undefined>(undefined);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const {
+    data,
+    error: updateError,
+    put: updateNote,
+  } = useAxios(`${process.env.NEXT_PUBLIC_API_URL}/api/notes`, true);
 
   // Fetch notes on component mount
   useEffect(() => {
     if (status === "idle") {
-      // If API is available, use this:
-      // dispatch(fetchNotes());
+      dispatch(fetchNotes());
 
-      // For demo, let's add some sample notes
-      if (notes.length === 0) {
-        dispatch(
-          addNote({
-            title: "Welcome to Sticky Notes!",
-            content:
-              "Click the + button to add a new note.\nClick on a note to edit it.",
-            color: "#FFC107",
-          })
-        );
-        dispatch(
-          addNote({
-            title: "Shopping List",
-            content: "• Milk\n• Eggs\n• Bread\n• Chocolate",
-            color: "#4CAF50",
-          })
-        );
-        dispatch(
-          addNote({
-            title: "Project Ideas",
-            content:
-              "1. Mobile app for task management\n2. Portfolio website\n3. Recipe sharing platform",
-            color: "#2196F3",
-          })
-        );
-      }
+      // if (notes.length === 0) {
+      //   dispatch(
+      //     addNote({
+      //       title: "Welcome to Sticky Notes!",
+      //       content:
+      //         "Click the + button to add a new note.\nClick on a note to edit it.",
+      //       color: "#FFC107",
+      //     })
+      //   );
+      //   dispatch(
+      //     addNote({
+      //       title: "Shopping List",
+      //       content: "• Milk\n• Eggs\n• Bread\n• Chocolate",
+      //       color: "#4CAF50",
+      //     })
+      //   );
+      //   dispatch(
+      //     addNote({
+      //       title: "Project Ideas",
+      //       content:
+      //         "1. Mobile app for task management\n2. Portfolio website\n3. Recipe sharing platform",
+      //       color: "#2196F3",
+      //     })
+      //   );
+      // }
     }
   }, [dispatch, status]);
+  useEffect(() => {
+    console.log(notes, "notes");
+  }, [notes]);
 
   // Filter notes based on search query
-  const filteredNotes = notes.filter(
-    (note) =>
-      note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      note.content.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredNotes =
+    notes?.filter(
+      (note) =>
+        note.title?.toLowerCase().includes(searchQuery?.toLowerCase()) ||
+        note.content?.toLowerCase().includes(searchQuery?.toLowerCase())
+    ) ?? [];
 
   const handleAddNote = () => {
     setCurrentNote(undefined);
@@ -88,35 +97,56 @@ const NotesBoard: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleSaveNote = (note: Partial<Note>) => {
+  const handleSaveNote = async (note: Partial<Note>) => {
     if (note.id) {
       // Update existing note
-      dispatch(updateNote(note as Note));
-      // If API is available:
+      // dispatch(updateNote(note as Note));
+      // Through Asyncthunk API:
       // dispatch(updateNoteAsync(note as Note));
+      // through custom hook with axios
+      await updateNote(
+        {
+          note_title: note.title || "",
+          note_content: note.content || "",
+          color: note.color || "#FFC107",
+        },
+        { id: note.id }
+      ).finally(() => {
+        dispatch(fetchNotes());
+      });
     } else {
       // Add new note
+      // dispatch(
+      //   addNote({
+      //     title: note.title || "",
+      //     content: note.content || "",
+      //     color: note.color || "#FFC107",
+      //   })
+      // );
+      // If API is available:
       dispatch(
-        addNote({
+        addNoteAsync({
           title: note.title || "",
           content: note.content || "",
           color: note.color || "#FFC107",
         })
-      );
-      // If API is available:
-      // dispatch(addNoteAsync({
-      //   title: note.title || '',
-      //   content: note.content || '',
-      //   color: note.color || '#FFC107'
-      // }));
+      ).finally(() => {
+        dispatch(fetchNotes());
+      });
     }
   };
 
   const handleDeleteNote = (id: string) => {
     if (confirm("Are you sure you want to delete this note?")) {
-      dispatch(deleteNote(id));
+      // dispatch(deleteNote(id));
       // If API is available:
       // dispatch(deleteNoteAsync(id));
+      deleteNoteServerAction(id).then((res: any) => {
+        console.log(res, "res");
+        if (res?.ok) {
+          dispatch(fetchNotes());
+        }
+      });
     }
   };
 

@@ -6,7 +6,7 @@ import { Note, noteColors } from "@/redux/slices/notesSlice";
 interface NoteEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (note: Partial<Note>) => void;
+  onSave: (note: Partial<Note>) => Promise<void>;
   note?: Note;
 }
 
@@ -19,6 +19,7 @@ const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [color, setColor] = useState(noteColors.at(0));
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (note) {
@@ -35,17 +36,20 @@ const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
     }
   }, [note, isOpen]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim()) return;
+
+    setIsLoading(true);
 
     onSave({
       ...(note && { id: note.id }),
       title,
       content,
       color,
+    }).finally(() => {
+      setIsLoading(false);
+      onClose();
     });
-
-    onClose();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -137,7 +141,11 @@ const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
                   <Button variant="outline" onClick={onClose}>
                     Cancel
                   </Button>
-                  <Button onClick={handleSave} disabled={!title.trim()}>
+                  <Button
+                    onClick={handleSave}
+                    disabled={!title.trim() || isLoading}
+                    isLoading={isLoading}
+                  >
                     {note ? "Update" : "Create"}
                   </Button>
                 </div>
