@@ -16,6 +16,12 @@ steps to run the nextjs project - npm install - npm run dev
 3.Change the folder to api and run the fastapi project
 steps to run the fastapi project - Switch to the fastapi-env folder - python -m ensurepip --default-pip to install pip - pip install -r requirements.txt - uvicorn main:app --reload
 
+# Routes
+
+- / --> Default page
+- /api/auth/ --> Authentication routes (Signin, Signup)
+- /api/notes --> Notes routes
+
 # Implemented Advanced Features
 
 - Redux with Redux Thunk with Bearer Token Authentication (Fetch, Create Note)
