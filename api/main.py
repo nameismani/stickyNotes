@@ -15,10 +15,14 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)]
 )
 
-# Load environment variables first
+
 dotenv_path = os.path.join(os.path.dirname(__file__), "..", ".env")
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
+else:
+    logging.info(f"No .env file found at {dotenv_path}")
+
+
 
 app = FastAPI(
     title="Notes API",
@@ -26,7 +30,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Add this for Vercel environment
+
 async def check_event_loop():
     """Ensure we have a running event loop for serverless environment"""
     try:
@@ -56,20 +60,15 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_db_client():
     try:
-        # Ensure event loop is available
-        await check_event_loop()
-        
-        # Log environment variables (excluding secrets)
+        # Print all environment variables (except sensitive ones)
         env_vars = {k: v if not any(secret in k.lower() for secret in ["key", "secret", "token", "password"]) else "[MASKED]" 
                    for k, v in os.environ.items()}
         logging.info(f"Environment variables: {env_vars}")
         
         # Check MongoDB URL
         mongodb_url = os.getenv("MONGODB_URL")
-        if not mongodb_url:
-            logging.error("MONGODB_URL environment variable is not set!")
-        else:
-            logging.info(f"MONGODB_URL is set: {mongodb_url[:20]}...")
+        
+        logging.info(f"MONGODB_URL is set: {mongodb_url}")
         
         # Initialize database connection
         await init_db()
@@ -95,7 +94,12 @@ async def read_root():
     # Ensure event loop is available
     await check_event_loop()
     logging.info("Root endpoint accessed!")
-    return {"message": "Hello, World!"}
+    mongodb_url = os.getenv("MONGODB_URL")
+    return {
+        "message": "Hello, World!",
+        "mongodb_url_exists": mongodb_url is not None,
+        "api_status": "online"
+    }
     
 
 @app.middleware("http")
@@ -105,6 +109,7 @@ async def log_requests(request: Request, call_next):
     
     # Get MongoDB URL (log it securely)
     mongoUrl = os.getenv("MONGODB_URL", "Not set")
+    
     masked_url = f"{mongoUrl[:15]}..." if len(mongoUrl) > 15 else "Not set properly"
     logging.info(f"MongoDB URL: {masked_url}")
     

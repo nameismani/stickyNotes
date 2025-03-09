@@ -2,7 +2,7 @@ export interface User {
   id?: string;
   username: string;
   email: string;
-  password?: string; // Only used during registration/login, not stored in state
+  password?: string;
 }
 
 export interface AuthState {

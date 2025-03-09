@@ -131,7 +131,7 @@ async def login(request: LoginRequest):
         )
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    # Use user_id instead of email in token
+
     access_token = create_access_token(
         data={"user_id": user["user_id"]},
         expires_delta=access_token_expires

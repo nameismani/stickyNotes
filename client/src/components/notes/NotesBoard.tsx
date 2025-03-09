@@ -117,7 +117,6 @@ const NotesBoard: React.FC = () => {
     }
   };
 
-  // Use the ref to open the confirmation modal
   const handleDeleteNote = (id: string) => {
     confirmModalRef.current?.open({
       title: "Delete Note",
@@ -127,7 +126,6 @@ const NotesBoard: React.FC = () => {
       cancelLabel: "Cancel",
       type: "danger",
       onConfirm: async () => {
-        // Return a promise that resolves when the delete action completes
         const result = await deleteNoteServerAction(id);
 
         if (result.success) {

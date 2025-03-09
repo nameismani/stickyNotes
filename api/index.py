@@ -1,5 +1,21 @@
+import os
 from mangum import Mangum
-from main import app
+import logging
 
-# This is the handler that Vercel will use
-handler = Mangum(app) 
+
+
+try:
+    from main import app
+    handler = Mangum(app)
+except Exception as e:
+    logging.error(f"Error importing app: {str(e)}", exc_info=True)
+    
+    # Create a fallback handler that returns error information
+    def handler(event, context):
+        return {
+            "statusCode": 500,
+            "body": f"Server configuration error: {str(e)}",
+            "headers": {
+                "Content-Type": "text/plain"
+            }
+        } 
