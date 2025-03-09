@@ -1,5 +1,5 @@
-import React, { useState, useEffect, use } from "react";
-import { motion, AnimatePresence, useTime } from "framer-motion";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FiPlus,
   FiSearch,
@@ -9,17 +9,11 @@ import {
 } from "react-icons/fi";
 import StickyNote from "./StickyNote";
 import NoteEditorModal from "./NoteEditorModal";
+import ConfirmationModal, {
+  ConfirmationModalRef,
+} from "@/components/ui/ConfirmationModal";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import {
-  Note,
-  addNote,
-  updateNote,
-  deleteNote,
-  fetchNotes,
-  addNoteAsync,
-  updateNoteAsync,
-  deleteNoteAsync,
-} from "@/redux/slices/notesSlice";
+import { Note, fetchNotes, addNoteAsync } from "@/redux/slices/notesSlice";
 import useAxios from "@/hooks/useAxios";
 import { deleteNoteServerAction } from "@/libs/action";
 import { useToast } from "@/context/ToastContext";
@@ -39,46 +33,24 @@ const NotesBoard: React.FC = () => {
   const [currentNote, setCurrentNote] = useState<Note | undefined>(undefined);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const { showToast } = useToast();
+
+  // Use ref for the confirmation modal instead of state
+  const confirmModalRef = useRef<ConfirmationModalRef>(null);
+
   const {
     data,
     error: updateError,
     put: updateNote,
   } = useAxios(`${process.env.NEXT_PUBLIC_API_URL}/api/notes`, true);
 
-  // Fetch notes on component mount
   useEffect(() => {
     if (status === "idle") {
       dispatch(fetchNotes());
-
-      // if (notes.length === 0) {
-      //   dispatch(
-      //     addNote({
-      //       title: "Welcome to Sticky Notes!",
-      //       content:
-      //         "Click the + button to add a new note.\nClick on a note to edit it.",
-      //       color: "#FFC107",
-      //     })
-      //   );
-      //   dispatch(
-      //     addNote({
-      //       title: "Shopping List",
-      //       content: "• Milk\n• Eggs\n• Bread\n• Chocolate",
-      //       color: "#4CAF50",
-      //     })
-      //   );
-      //   dispatch(
-      //     addNote({
-      //       title: "Project Ideas",
-      //       content:
-      //         "1. Mobile app for task management\n2. Portfolio website\n3. Recipe sharing platform",
-      //       color: "#2196F3",
-      //     })
-      //   );
-      // }
     }
   }, [dispatch, status]);
+
   useEffect(() => {
-    console.log(notes, "notes rendered");
+    console.log(notes, "notes");
   }, [notes]);
 
   // Filter notes based on search query
@@ -102,10 +74,6 @@ const NotesBoard: React.FC = () => {
   const handleSaveNote = async (note: Partial<Note>) => {
     if (note.id) {
       // Update existing note
-      // dispatch(updateNote(note as Note));
-      // Through AsyncThunk API:
-      // dispatch(updateNoteAsync(note as Note));
-      // through custom hook with axios
       try {
         const response = await updateNote(
           {
@@ -127,14 +95,6 @@ const NotesBoard: React.FC = () => {
       }
     } else {
       // Add new note
-      // dispatch(
-      //   addNote({
-      //     title: note.title || "",
-      //     content: note.content || "",
-      //     color: note.color || "#FFC107",
-      //   })
-      // );
-      // Through AsyncThunk API:
       dispatch(
         addNoteAsync({
           title: note.title || "",
@@ -157,24 +117,33 @@ const NotesBoard: React.FC = () => {
     }
   };
 
+  // Use the ref to open the confirmation modal
   const handleDeleteNote = (id: string) => {
-    if (confirm("Are you sure you want to delete this note?")) {
-      // dispatch(deleteNote(id));
-      // If API is available:
-      // dispatch(deleteNoteAsync(id));
-      deleteNoteServerAction(id).then((result) => {
+    confirmModalRef.current?.open({
+      title: "Delete Note",
+      message:
+        "Are you sure you want to delete this note? This action cannot be undone.",
+      confirmLabel: "Delete",
+      cancelLabel: "Cancel",
+      type: "danger",
+      onConfirm: async () => {
+        // Return a promise that resolves when the delete action completes
+        const result = await deleteNoteServerAction(id);
+
         if (result.success) {
           dispatch(fetchNotes());
           showToast("Note deleted successfully", "success", "top-right");
         } else {
-          // Handle error - maybe show a toast notification
           console.error("Failed to delete note:", result.message);
           showToast("Failed to delete note", "error", "top-right");
         }
-      });
-    }
+
+        return result; // Return the result so the modal knows the action completed
+      },
+    });
   };
 
+  // Layout variants for the grid/list view
   const gridLayoutClass =
     viewMode === "grid"
       ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
@@ -244,7 +213,6 @@ const NotesBoard: React.FC = () => {
       ) : status === "failed" ? (
         <div className="flex flex-col items-center justify-center h-64 text-center p-4">
           <FiAlertCircle size={40} color="#ef4444" />
-          {/* className="mb-4" */}
           <h3 className="text-xl font-bold text-gray-800 mb-2">
             Error Loading Notes
           </h3>
@@ -298,6 +266,9 @@ const NotesBoard: React.FC = () => {
         onSave={handleSaveNote}
         note={currentNote}
       />
+
+      {/* Confirmation Modal with imperative handle */}
+      <ConfirmationModal ref={confirmModalRef} backgroundStyle="blur" />
     </div>
   );
 };
