@@ -40,4 +40,4 @@ UserSchema.pre("save", function (next) {
 });
 
 export const UserModel =
-  mongoose.models.User || model<UserTypes>("User", UserSchema);
+  mongoose.models.users || model<UserTypes>("users", UserSchema);

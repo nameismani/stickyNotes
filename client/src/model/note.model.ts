@@ -1,7 +1,7 @@
 import mongoose, { Schema, model, Document } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 
-export interface UserTypes extends Document {
+export interface NoteTypes extends Document {
   note_id: string;
   user_id: string;
   note_title: string;
@@ -11,7 +11,7 @@ export interface UserTypes extends Document {
   create_on: number;
 }
 
-const UserSchema = new Schema<UserTypes>(
+const NoteSchema = new Schema<NoteTypes>(
   {
     note_id: {
       type: String,
@@ -39,10 +39,10 @@ const UserSchema = new Schema<UserTypes>(
   }
 );
 
-UserSchema.pre("save", function (next) {
+NoteSchema.pre("save", function (next) {
   this.last_update = Date.now();
   next();
 });
 
-export const UserModel =
-  mongoose.models.User || model<UserTypes>("User", UserSchema);
+export const NoteModel =
+  mongoose.models.notes || model<NoteTypes>("notes", NoteSchema);
