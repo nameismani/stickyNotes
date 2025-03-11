@@ -60,7 +60,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onEdit, onDelete }) => {
         <span title={formatDate(note.updatedAt)}>
           {getRelativeTime(note.updatedAt)}
         </span>
-        {note.createdAt !== note.updatedAt && (
+        {/* {note.createdAt !== note.updatedAt && (
           <span className="flex items-center">
             <FiCheckCircle size={14} />
             <span className="ml-1">
@@ -69,7 +69,7 @@ const StickyNote: React.FC<StickyNoteProps> = ({ note, onEdit, onDelete }) => {
                 : "Updated"}
             </span>
           </span>
-        )}
+        )} */}
       </div>
     </motion.div>
   );
