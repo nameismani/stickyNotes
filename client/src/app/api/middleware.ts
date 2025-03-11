@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.SECRET_KEY || "your-secret-key";
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   // Skip authentication for login and signup routes
   if (
     request.nextUrl.pathname.startsWith("/api/auth/login") ||
@@ -27,7 +27,7 @@ export function middleware(request: NextRequest) {
     try {
       // Verify token
       const decoded = jwt.verify(token, JWT_SECRET) as { user_id: string };
-
+      console.log(decoded, "decoded");
       // Add user_id to headers for downstream handlers
       const requestHeaders = new Headers(request.headers);
       requestHeaders.set("x-user-id", decoded.user_id);

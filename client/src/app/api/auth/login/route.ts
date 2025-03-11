@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { dbConnection } from "../../../../port/db.connection";
+import { dbConnection } from "@/port/db.connection";
 import { UserModel } from "@/model/user.model";
 
 dbConnection();

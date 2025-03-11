@@ -23,5 +23,4 @@ async function middleware(req: NextRequest) {
 export const config = {
   matcher: ["/", "/auth", "/home/:path*"],
 };
-
 export default middleware;
