@@ -7,13 +7,14 @@ dbConnection();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await getUserFromToken(request);
+    const { id } = await params;
 
     const note = await NoteModel.findOne({
-      note_id: params.id,
+      note_id: id,
       user_id: userId,
     });
 
@@ -33,10 +34,11 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId, user } = await getUserFromToken(request);
+    const { id } = await params;
 
     const body = await request.json();
     const { note_title, note_content, color } = body;
@@ -50,7 +52,7 @@ export async function PUT(
     };
 
     const result = await NoteModel.findOneAndUpdate(
-      { note_id: params.id, user_id: userId },
+      { note_id: id, user_id: userId },
       { $set: updateData },
       { new: true }
     );
@@ -71,13 +73,14 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await getUserFromToken(request);
+    const { id } = await params;
 
     const result = await NoteModel.deleteOne({
-      note_id: params.id,
+      note_id: id,
       user_id: userId,
     });
 
