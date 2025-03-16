@@ -33,8 +33,6 @@ interface PathParams {
   resource?: string[];
 }
 
-// #fsdaf
-
 const useAxios = <T>(
   url: string,
   isAuthenticated: boolean = false,
